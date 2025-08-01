@@ -59,9 +59,7 @@
     });
 
     function showTimetable(selectedDate) {
-      console.log("Showing timetable for date:", selectedDate.toDateString());
-      console.log("Total reservations:", reservations.length);
-
+      console.log("Showing timetable for date:", selectedDate);
       const table = document.getElementById("timetable");
       table.innerHTML = "";
 
@@ -87,25 +85,27 @@
 
         timeSlots.forEach(hour => {
           const cell = document.createElement("td");
+
+          // Create slot time in UTC to match reservation UTC times
           const slotTimeUTC = new Date(Date.UTC(
             selectedDate.getUTCFullYear(),
             selectedDate.getUTCMonth(),
             selectedDate.getUTCDate(),
             hour, 0, 0, 0
           ));
-        
+
           const res = reservations.find(r => {
             const checkIn = r.checkInDate;
             const checkOut = r.checkOutDate;
-        
+
             if (!checkIn || !checkOut) return false;
-        
+
             const sameRoom = String(r["Room Number"]) === String(room);
             const overlaps = slotTimeUTC >= checkIn && slotTimeUTC < checkOut;
-        
+
             return sameRoom && overlaps;
           });
-        
+
           if (res) {
             const status = res["Status"];
             cell.innerText = res["Student Email"];
@@ -115,7 +115,7 @@
             cell.className = "empty";
             cell.innerText = "";
           }
-        
+
           row.appendChild(cell);
         });
 
@@ -123,6 +123,7 @@
       });
 
       table.appendChild(tbody);
+      console.log("Total reservations:", reservations.length);
     }
   </script>
 </body>
