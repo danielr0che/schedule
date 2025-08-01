@@ -46,8 +46,8 @@
       .then(res => res.json())
       .then(data => {
         reservations = data.map(r => {
-          r.checkInDate = parseDateTime(r["Check-In"]);
-          r.checkOutDate = parseDateTime(r["Check-Out"]);
+          r.checkInDate = new Date(r["Check-In"]);
+          r.checkOutDate = new Date(r["Check-Out"]);
           return r;
         });
         showTimetable(new Date());
@@ -88,17 +88,21 @@
 
           const slotDate = new Date(selectedDate);
           slotDate.setHours(hour, 0, 0, 0);
-
+          
           const res = reservations.find(r => {
             const checkIn = r.checkInDate;
             const checkOut = r.checkOutDate;
-
+          
             if (!checkIn || !checkOut) return false;
-
+          
             const sameRoom = String(r["Room Number"]) === String(room);
-            const overlaps = slotDate >= checkIn && slotDate < checkOut;
+            const slotTime = new Date(selectedDate);
+            slotTime.setHours(hour, 0, 0, 0);
+          
+            const overlaps = slotTime >= checkIn && slotTime < checkOut;
             return sameRoom && overlaps;
           });
+
 
           if (res) {
             const status = res["Status"];
