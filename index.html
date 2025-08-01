@@ -33,24 +33,23 @@
 
     let reservations = [];
 
-    // Parse DD/MM/YYYY HH:mm:ss into JS Date
-    function parseDateTime(str) {
-      if (!str) return null;
-      const [datePart, timePart] = str.split(" ");
-      const [day, month, year] = datePart.split("/").map(Number);
-      const [hour, minute, second] = timePart.split(":").map(Number);
-      return new Date(year, month - 1, day, hour, minute, second);
-    }
-
     fetch(apiUrl)
       .then(res => res.json())
       .then(data => {
         reservations = data.map(r => {
-          r.checkInDate = new Date(r["Check-In"]);
-          r.checkOutDate = new Date(r["Check-Out"]);
+          // Ensure we can parse these dates
+          try {
+            r.checkInDate = new Date(r["Check-In"]);
+            r.checkOutDate = new Date(r["Check-Out"]);
+          } catch (e) {
+            console.warn("Invalid date:", r["Check-In"], r["Check-Out"]);
+          }
           return r;
         });
         showTimetable(new Date());
+      })
+      .catch(err => {
+        console.error("Failed to fetch reservations:", err);
       });
 
     const dateInput = document.getElementById("datePicker");
@@ -85,24 +84,20 @@
 
         timeSlots.forEach(hour => {
           const cell = document.createElement("td");
+          const slotTime = new Date(selectedDate);
+          slotTime.setHours(hour, 0, 0, 0);
 
-          const slotDate = new Date(selectedDate);
-          slotDate.setHours(hour, 0, 0, 0);
-          
           const res = reservations.find(r => {
             const checkIn = r.checkInDate;
             const checkOut = r.checkOutDate;
-          
+
             if (!checkIn || !checkOut) return false;
-          
+
             const sameRoom = String(r["Room Number"]) === String(room);
-            const slotTime = new Date(selectedDate);
-            slotTime.setHours(hour, 0, 0, 0);
-          
             const overlaps = slotTime >= checkIn && slotTime < checkOut;
+
             return sameRoom && overlaps;
           });
-
 
           if (res) {
             const status = res["Status"];
