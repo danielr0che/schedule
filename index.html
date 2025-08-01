@@ -34,22 +34,22 @@
     let reservations = [];
 
     fetch(apiUrl)
-      .then(res => res.json())
+      .then(res => {
+        console.log("Fetch response status:", res.status);
+        return res.json();
+      })
       .then(data => {
+        console.log("Fetched reservations data:", data);
         reservations = data.map(r => {
-          // Ensure we can parse these dates
-          try {
-            r.checkInDate = new Date(r["Check-In"]);
-            r.checkOutDate = new Date(r["Check-Out"]);
-          } catch (e) {
-            console.warn("Invalid date:", r["Check-In"], r["Check-Out"]);
-          }
+          r.checkInDate = new Date(r["Check-In"]);
+          r.checkOutDate = new Date(r["Check-Out"]);
           return r;
         });
+        console.log("Processed reservations:", reservations);
         showTimetable(new Date());
       })
       .catch(err => {
-        console.error("Failed to fetch reservations:", err);
+        console.error("Fetch error:", err);
       });
 
     const dateInput = document.getElementById("datePicker");
@@ -59,6 +59,9 @@
     });
 
     function showTimetable(selectedDate) {
+      console.log("Showing timetable for date:", selectedDate.toDateString());
+      console.log("Total reservations:", reservations.length);
+
       const table = document.getElementById("timetable");
       table.innerHTML = "";
 
