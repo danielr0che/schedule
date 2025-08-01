@@ -33,12 +33,21 @@
 
     let reservations = [];
 
+    // Parse DD/MM/YYYY HH:mm:ss into JS Date
+    function parseDateTime(str) {
+      if (!str) return null;
+      const [datePart, timePart] = str.split(" ");
+      const [day, month, year] = datePart.split("/").map(Number);
+      const [hour, minute, second] = timePart.split(":").map(Number);
+      return new Date(year, month - 1, day, hour, minute, second);
+    }
+
     fetch(apiUrl)
       .then(res => res.json())
       .then(data => {
         reservations = data.map(r => {
-          r.checkInDate = new Date(r["Check-In"]);
-          r.checkOutDate = new Date(r["Check-Out"]);
+          r.checkInDate = parseDateTime(r["Check-In"]);
+          r.checkOutDate = parseDateTime(r["Check-Out"]);
           return r;
         });
         showTimetable(new Date());
@@ -66,7 +75,6 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
 
-      // Create rows for each room
       const tbody = document.createElement("tbody");
 
       roomNumbers.forEach(room => {
@@ -78,19 +86,18 @@
         timeSlots.forEach(hour => {
           const cell = document.createElement("td");
 
+          const slotDate = new Date(selectedDate);
+          slotDate.setHours(hour, 0, 0, 0);
+
           const res = reservations.find(r => {
             const checkIn = r.checkInDate;
             const checkOut = r.checkOutDate;
-            const sameDay =
-              checkIn.getDate() === selectedDate.getDate() &&
-              checkIn.getMonth() === selectedDate.getMonth() &&
-              checkIn.getFullYear() === selectedDate.getFullYear();
-            return (
-              r["Room Number"] == room &&
-              sameDay &&
-              hour >= checkIn.getHours() &&
-              hour < checkOut.getHours()
-            );
+
+            if (!checkIn || !checkOut) return false;
+
+            const sameRoom = String(r["Room Number"]) === String(room);
+            const overlaps = slotDate >= checkIn && slotDate < checkOut;
+            return sameRoom && overlaps;
           });
 
           if (res) {
